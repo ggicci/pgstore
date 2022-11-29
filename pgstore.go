@@ -12,9 +12,6 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
-
-	// Include the pq postgres driver.
-	_ "github.com/lib/pq"
 )
 
 // PGStore represents the currently configured session store.
@@ -35,21 +32,10 @@ type PGSession struct {
 	ExpiresOn  time.Time
 }
 
-// NewPGStore creates a new PGStore instance and a new database/sql pool.
-// This will also create in the database the schema needed by pgstore.
-func NewPGStore(dbURL string, keyPairs ...[]byte) (*PGStore, error) {
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		// Ignore and return nil.
-		return nil, err
-	}
-	return NewPGStoreFromPool(db, keyPairs...)
-}
-
-// NewPGStoreFromPool creates a new PGStore instance from an existing
+// NewPGStore creates a new PGStore instance from an existing
 // database/sql pool.
 // This will also create the database schema needed by pgstore.
-func NewPGStoreFromPool(db *sql.DB, keyPairs ...[]byte) (*PGStore, error) {
+func NewPGStore(db *sql.DB, keyPairs ...[]byte) (*PGStore, error) {
 	dbStore := &PGStore{
 		Codecs: securecookie.CodecsFromPairs(keyPairs...),
 		Options: &sessions.Options{
