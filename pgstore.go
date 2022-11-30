@@ -1,6 +1,7 @@
 package pgstore
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base32"
 	"fmt"
@@ -19,7 +20,7 @@ type PGStore struct {
 	Codecs  []securecookie.Codec
 	Options *sessions.Options
 	Path    string
-	DbPool  *sql.DB
+	DbPool  DBI
 }
 
 // PGSession type
@@ -35,7 +36,7 @@ type PGSession struct {
 // NewPGStore creates a new PGStore instance from an existing
 // database/sql pool.
 // This will also create the database schema needed by pgstore.
-func NewPGStore(db *sql.DB, keyPairs ...[]byte) (*PGStore, error) {
+func NewPGStore(db DBI, keyPairs ...[]byte) (*PGStore, error) {
 	dbStore := &PGStore{
 		Codecs: securecookie.CodecsFromPairs(keyPairs...),
 		Options: &sessions.Options{
@@ -210,7 +211,7 @@ func (db *PGStore) save(session *sessions.Session) error {
 
 // Delete session
 func (db *PGStore) destroy(session *sessions.Session) error {
-	_, err := db.DbPool.Exec("DELETE FROM http_sessions WHERE key = $1", session.ID)
+	_, err := db.DbPool.Exec(context.Background(), "DELETE FROM http_sessions WHERE key = $1", session.ID)
 	return err
 }
 
@@ -234,7 +235,7 @@ func (db *PGStore) createSessionsTable() error {
               END;
               $$;`
 
-	_, err := db.DbPool.Exec(stmt)
+	_, err := db.DbPool.Exec(context.Background(), stmt)
 	if err != nil {
 		return fmt.Errorf("Unable to create http_sessions table in the database, err: %w", err)
 	}
@@ -244,7 +245,7 @@ func (db *PGStore) createSessionsTable() error {
 
 func (db *PGStore) selectOne(s *PGSession, key string) error {
 	stmt := "SELECT id, key, data, created_on, modified_on, expires_on FROM http_sessions WHERE key = $1"
-	err := db.DbPool.QueryRow(stmt, key).Scan(&s.ID, &s.Key, &s.Data, &s.CreatedOn, &s.ModifiedOn, &s.ExpiresOn)
+	err := db.DbPool.QueryRow(context.Background(), stmt, key).Scan(&s.ID, &s.Key, &s.Data, &s.CreatedOn, &s.ModifiedOn, &s.ExpiresOn)
 	if err != nil {
 		return fmt.Errorf("Unable to find session in the database, err: %w", err)
 	}
@@ -255,14 +256,22 @@ func (db *PGStore) selectOne(s *PGSession, key string) error {
 func (db *PGStore) insert(s *PGSession) error {
 	stmt := `INSERT INTO http_sessions (key, data, created_on, modified_on, expires_on)
            VALUES ($1, $2, $3, $4, $5)`
-	_, err := db.DbPool.Exec(stmt, s.Key, s.Data, s.CreatedOn, s.ModifiedOn, s.ExpiresOn)
+	_, err := db.DbPool.Exec(
+		context.Background(),
+		stmt,
+		s.Key,
+		s.Data,
+		s.CreatedOn,
+		s.ModifiedOn,
+		s.ExpiresOn,
+	)
 
 	return err
 }
 
 func (db *PGStore) update(s *PGSession) error {
 	stmt := `UPDATE http_sessions SET data=$1, modified_on=$2, expires_on=$3 WHERE key=$4`
-	_, err := db.DbPool.Exec(stmt, s.Data, s.ModifiedOn, s.ExpiresOn, s.Key)
+	_, err := db.DbPool.Exec(context.Background(), stmt, s.Data, s.ModifiedOn, s.ExpiresOn, s.Key)
 
 	return err
 }

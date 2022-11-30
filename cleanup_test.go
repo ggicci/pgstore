@@ -1,6 +1,7 @@
 package pgstore
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -41,7 +42,7 @@ func TestCleanup(t *testing.T) {
 
 	// SELECT expired sessions. We should get a count of zero back.
 	var count int
-	err = ss.DbPool.QueryRow("SELECT count(*) FROM http_sessions WHERE expires_on < now()").Scan(&count)
+	err = ss.DbPool.QueryRow(context.Background(), "SELECT count(*) FROM http_sessions WHERE expires_on < now()").Scan(&count)
 	if err != nil {
 		t.Fatalf("failed to select expired sessions from DB: %v", err)
 	}

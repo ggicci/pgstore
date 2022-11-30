@@ -1,6 +1,7 @@
 package pgstore
 
 import (
+	"context"
 	"log"
 	"time"
 )
@@ -53,6 +54,6 @@ func (db *PGStore) cleanup(interval time.Duration, quit <-chan struct{}, done ch
 
 // deleteExpired deletes expired sessions from the database.
 func (db *PGStore) deleteExpired() error {
-	_, err := db.DbPool.Exec("DELETE FROM http_sessions WHERE expires_on < now()")
+	_, err := db.DbPool.Exec(context.Background(), "DELETE FROM http_sessions WHERE expires_on < now()")
 	return err
 }

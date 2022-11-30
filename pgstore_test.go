@@ -29,7 +29,7 @@ func (ho headerOnlyResponseWriter) WriteHeader(int) {
 
 var secret = "EyaC2BPcJtNqU3tjEHy+c+Wmqc1yihYIbUWEl/jk0Ga73kWBclmuSFd9HuJKwJw/Wdsh1XnjY2Bw1HBVph6WOw=="
 
-func openDB(t *testing.T) *sql.DB {
+func openDB(t *testing.T) DBI {
 	dsn := os.Getenv("PGSTORE_TEST_CONN")
 	if dsn == "" {
 		t.Skip("This test requires a real database.")
@@ -40,7 +40,7 @@ func openDB(t *testing.T) *sql.DB {
 		t.Fatal("Failed to connect to the database", err)
 	}
 
-	return db
+	return NewDatabaseSQLAdaptor(db)
 }
 
 func TestPGStore(t *testing.T) {
