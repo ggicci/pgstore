@@ -2,18 +2,14 @@ package pgstore
 
 import (
 	"net/http"
-	"os"
 	"testing"
 	"time"
 )
 
 func TestCleanup(t *testing.T) {
-	dsn := os.Getenv("PGSTORE_TEST_CONN")
-	if dsn == "" {
-		t.Skip("This test requires a real database.")
-	}
+	db := openDB(t)
 
-	ss, err := NewPGStore(dsn, []byte(secret))
+	ss, err := NewPGStore(db, []byte(secret))
 	if err != nil {
 		t.Fatal("Failed to get store", err)
 	}
