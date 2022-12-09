@@ -26,8 +26,8 @@ type PGStore struct {
 // PGSession type
 type PGSession struct {
 	ID         int64
-	Key        string
-	Data       string
+	Key        []byte
+	Data       []byte
 	CreatedOn  time.Time
 	ModifiedOn time.Time
 	ExpiresOn  time.Time
@@ -195,8 +195,8 @@ func (db *PGStore) save(session *sessions.Session) error {
 	}
 
 	s := PGSession{
-		Key:        session.ID,
-		Data:       encoded,
+		Key:        []byte(session.ID),
+		Data:       []byte(encoded),
 		CreatedOn:  createdOn,
 		ExpiresOn:  expiresOn,
 		ModifiedOn: time.Now(),
@@ -237,7 +237,7 @@ func (db *PGStore) createSessionsTable() error {
 
 	_, err := db.DbPool.Exec(context.Background(), stmt)
 	if err != nil {
-		return fmt.Errorf("Unable to create http_sessions table in the database, err: %w", err)
+		return fmt.Errorf("unable to create http_sessions table in the database, err: %w", err)
 	}
 
 	return nil
@@ -247,7 +247,7 @@ func (db *PGStore) selectOne(s *PGSession, key string) error {
 	stmt := "SELECT id, key, data, created_on, modified_on, expires_on FROM http_sessions WHERE key = $1"
 	err := db.DbPool.QueryRow(context.Background(), stmt, key).Scan(&s.ID, &s.Key, &s.Data, &s.CreatedOn, &s.ModifiedOn, &s.ExpiresOn)
 	if err != nil {
-		return fmt.Errorf("Unable to find session in the database, err: %w", err)
+		return fmt.Errorf("unable to find session in the database, err: %w", err)
 	}
 
 	return nil
