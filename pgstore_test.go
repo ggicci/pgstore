@@ -1,4 +1,4 @@
-package pgstore
+package pgstore_test
 
 import (
 	"database/sql"
@@ -10,7 +10,9 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 
-	_ "github.com/lib/pq"
+	// _ "github.com/lib/pq"
+	// _ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/antonlindstrom/pgstore"
 )
 
 type headerOnlyResponseWriter http.Header
@@ -29,24 +31,24 @@ func (ho headerOnlyResponseWriter) WriteHeader(int) {
 
 var secret = "EyaC2BPcJtNqU3tjEHy+c+Wmqc1yihYIbUWEl/jk0Ga73kWBclmuSFd9HuJKwJw/Wdsh1XnjY2Bw1HBVph6WOw=="
 
-func openDB(t *testing.T) DBI {
+func openDB(t *testing.T) pgstore.DBI {
 	dsn := os.Getenv("PGSTORE_TEST_CONN")
 	if dsn == "" {
 		t.Skip("This test requires a real database.")
 	}
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		t.Fatal("Failed to connect to the database", err)
 	}
 
-	return NewDatabaseSQLAdaptor(db)
+	return pgstore.NewDatabaseSQLAdaptor(db)
 }
 
 func TestPGStore(t *testing.T) {
 	db := openDB(t)
 
-	ss, err := NewPGStore(db, []byte(secret))
+	ss, err := pgstore.NewPGStore(db, []byte(secret))
 	if err != nil {
 		t.Fatal("Failed to get store", err)
 	}
@@ -144,7 +146,7 @@ func TestPGStore(t *testing.T) {
 
 func TestSessionOptionsAreUniquePerSession(t *testing.T) {
 	db := openDB(t)
-	ss, err := NewPGStore(db, []byte(secret))
+	ss, err := pgstore.NewPGStore(db, []byte(secret))
 	if err != nil {
 		t.Fatal("Failed to get store", err)
 	}

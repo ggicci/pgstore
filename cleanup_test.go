@@ -1,16 +1,18 @@
-package pgstore
+package pgstore_test
 
 import (
 	"context"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/antonlindstrom/pgstore"
 )
 
 func TestCleanup(t *testing.T) {
 	db := openDB(t)
 
-	ss, err := NewPGStore(db, []byte(secret))
+	ss, err := pgstore.NewPGStore(db, []byte(secret))
 	if err != nil {
 		t.Fatal("Failed to get store", err)
 	}
